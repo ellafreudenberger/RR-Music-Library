@@ -1,39 +1,38 @@
 import React, { useEffect, useState } from 'react';
 import Gallery from './components/Gallery';
 import SearchBar from './components/SearchBar';
-import Favorites from './Favorites';
+import Loader from 'react-loader-spinner';
 
 function App() {
   const [searchTerm, setSearchTerm] = useState('');
   const [data, setData] = useState([]);
   const [message, setMessage] = useState('Search for Music!');
-  const [favorites, setFavorites] = useState([]);
+  const [isLoading, setIsLoading] = useState(false); 
 
   useEffect(() => {
     if (searchTerm) {
       document.title = `${searchTerm} Music`;
       const fetchData = async () => {
-        const response = await fetch(
-          `https://itunes.apple.com/search?term=${searchTerm}`
-        );
-        const resData = await response.json();
-        if (resData.results.length > 0) {
-          setData(resData.results);
-        } else {
-          setMessage('Not Found');
+        setIsLoading(true); 
+        try {
+          const response = await fetch(
+            `https://itunes.apple.com/search?term=${searchTerm}`
+          );
+          const resData = await response.json();
+          if (resData.results.length > 0) {
+            setData(resData.results);
+          } else {
+            setMessage('Not Found');
+          }
+        } catch (error) {
+          console.error('Error fetching data:', error);
+        } finally {
+          setIsLoading(false); // Set isLoading to false after fetching
         }
       };
       fetchData();
     }
   }, [searchTerm]);
-
-  const toggleFavorite = (musicItem) => {
-    if (favorites.some((item) => item.trackId === musicItem.trackId)) {
-      setFavorites(favorites.filter((item) => item.trackId !== musicItem.trackId));
-    } else {
-      setFavorites([...favorites, musicItem]);
-    }
-  };
 
   const handleSearch = (e, term) => {
     e.preventDefault();
@@ -43,9 +42,14 @@ function App() {
   return (
     <div className="App">
       <SearchBar handleSearch={handleSearch} />
-      <Favorites toggleFavorite={toggleFavorite} favorites={favorites} />
-      {message}
-      <Gallery data={data} toggleFavorite={toggleFavorite} favorites={favorites} />
+      {isLoading ? (
+        <Loader type="TailSpin" color="#00BFFF" height={80} width={80} />
+      ) : (
+        <div>
+          {message}
+          <Gallery data={data} isLoading={isLoading} />
+        </div>
+      )}
     </div>
   );
 }
