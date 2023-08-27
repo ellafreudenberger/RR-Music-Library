@@ -1,41 +1,53 @@
-import './App.css';
-import { useEffect, useState } from 'react'
-import Gallery from './components/Gallery'
-import SearchBar from './components/SearchBar'
+import React, { useEffect, useState } from 'react';
+import Gallery from './components/Gallery';
+import SearchBar from './components/SearchBar';
+import Favorites from './Favorites';
 
 function App() {
-  let [searchTerm, setSearchTerm] = useState('')
-  let [data, setData] = useState([])
-  let [message, setMessage] = useState('Search for Music!')
+  const [searchTerm, setSearchTerm] = useState('');
+  const [data, setData] = useState([]);
+  const [message, setMessage] = useState('Search for Music!');
+  const [favorites, setFavorites] = useState([]);
 
   useEffect(() => {
     if (searchTerm) {
-      document.title=`${searchTerm} Music`
+      document.title = `${searchTerm} Music`;
       const fetchData = async () => {
-        const response = await fetch(`https://itunes.apple.com/search?term=${searchTerm}`)
-        const resData = await response.json()
-        if(resData.results.length > 0) {
-          setData(resData.results)
+        const response = await fetch(
+          `https://itunes.apple.com/search?term=${searchTerm}`
+        );
+        const resData = await response.json();
+        if (resData.results.length > 0) {
+          setData(resData.results);
         } else {
-          setMessage('Not Found')
+          setMessage('Not Found');
         }
-      }
-      fetchData()
-  }
-  }, [searchTerm])
+      };
+      fetchData();
+    }
+  }, [searchTerm]);
+
+  const toggleFavorite = (musicItem) => {
+    if (favorites.some((item) => item.trackId === musicItem.trackId)) {
+      setFavorites(favorites.filter((item) => item.trackId !== musicItem.trackId));
+    } else {
+      setFavorites([...favorites, musicItem]);
+    }
+  };
 
   const handleSearch = (e, term) => {
-    e.preventDefault()
-    setSearchTerm(term)
-  }
+    e.preventDefault();
+    setSearchTerm(term);
+  };
 
   return (
     <div className="App">
       <SearchBar handleSearch={handleSearch} />
+      <Favorites toggleFavorite={toggleFavorite} favorites={favorites} />
       {message}
-      <Gallery data={data} />
+      <Gallery data={data} toggleFavorite={toggleFavorite} favorites={favorites} />
     </div>
   );
 }
 
-export default App;
+export default App
